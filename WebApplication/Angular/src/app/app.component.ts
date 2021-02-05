@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-import { ConfigService } from 'src/service/config-service.service';
+import { FileData } from 'src/model/file-data';
+import { ReportResult } from 'src/model/report-result';
+import { FileUploadService } from 'src/service/file-upload-service';
 
 @Component({
   selector: 'app-root',
@@ -9,15 +11,46 @@ import { ConfigService } from 'src/service/config-service.service';
 export class AppComponent {
   title = 'Angular';
   result : any;
-  constructor(private configService : ConfigService)
+
+  listingFileCsv : string;
+  reportResult : ReportResult;
+
+  constructor(private fileUploadService : FileUploadService)
   {
 
   }
 
   ngOnInit()
   {
-    this.configService.getResult()
-    .subscribe(result => (this.result = result));
+  
+  }
+
+  onFileChanged($event)
+  {
+    var that = this;
+    let inputFile= $event.target.files[0];
+    var reader = new FileReader();
+     reader.onload = (e)=> {
+      var binaryString = <string>reader.result;
+      var b64String = window.btoa(binaryString);
+      that.listingFileCsv = b64String;
+    };
+    reader.readAsBinaryString(inputFile);
+  }
+
+  uploadClicked()
+  {
+    var fileData = new FileData();
+    fileData.listingFile = this.listingFileCsv;
+
+    this.fileUploadService.importCsv(fileData).subscribe( res => 
+    {
+      this.reportResult = res;
+    },  
+    err => 
+    {
+ 
+    });
   }
 
 }
